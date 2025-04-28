@@ -3,7 +3,7 @@ torch==2.7.0            # PyTorch for deep learning
 transformers==4.51.3       # Hugging Face Transformers library
 fastapi==0.115.12             # Web framework
 uvicorn==0.34.2    # ASGI server
-gunicorn==22.0.0          # WSGI server for FastAPI
+gunicorn==23.0.0          # WSGI server for FastAPI
 sentence-transformers==4.1.0 # Hugging Face model library
 pydantic==2.11.3            # Data validation (used by FastAPI)
 pydantic-settings==2.9.1     # For loading settings from .env
