@@ -51,7 +51,7 @@ class SummarizationService:
                 max_length=max_length,
                 min_length=min_length,
                 num_beams=4,
-                no_repeat_ngram_size=3,
+                no_repeat_ngram_size=2,
                 early_stopping=True
             )
             
