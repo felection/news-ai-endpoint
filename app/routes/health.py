@@ -12,6 +12,9 @@ async def health_check():
         "status": "healthy",
         "endpoints": [
             {"path": f"{settings.api_v1_str}/embed", "method": "POST", "description": "Single text embedding"},
-            {"path": f"{settings.api_v1_str}/embed/batch", "method": "POST", "description": "Batch text embeddings"}
+            {"path": f"{settings.api_v1_str}/embed/batch", "method": "POST", "description": "Batch text embeddings"},
+            {"path": f"{settings.api_v1_str}/translate", "method": "POST", "description": "German to English translation"},
+            {"path": f"{settings.api_v1_str}/summarize", "method": "POST", "description": "Text summarization"}
         ]
     }
+

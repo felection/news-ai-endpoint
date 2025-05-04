@@ -10,3 +10,4 @@ pydantic-settings==2.9.1     # For loading settings from .env
 python-dotenv==1.1.0       # Loads .env file for local development
 sacremoses==0.1.1
 sentencepiece==0.2.0
+protobuf==6.30.2
