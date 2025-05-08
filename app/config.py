@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     api_secret: str = os.getenv("API_SECRET", "")
     debug_mode: bool = os.getenv("DEBUG_MODE", "False").lower() == "true"
     log_level: str = os.getenv("LOG_LEVEL", "info")
+    HF_TOKEN: str = os.getenv("HF_TOKEN", "")
 
     class Config:
         env_file = ".env"
