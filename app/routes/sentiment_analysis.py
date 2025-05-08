@@ -12,7 +12,7 @@ async def analyze_sentiment(
     _ = Depends(validate_api_key)
 ):
     """
-    Analyze sentiment of English text.
+    Analyze sentiment of English text. Positive or Negative sentiment.
     
     - **text**: Text to analyze for sentiment
     
