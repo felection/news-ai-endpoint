@@ -15,7 +15,8 @@ async def health_check():
             {"path": f"{settings.api_v1_str}/embed/batch", "method": "POST", "description": "Batch text embeddings"},
             {"path": f"{settings.api_v1_str}/translate", "method": "POST", "description": "German to English translation"},
             {"path": f"{settings.api_v1_str}/summarize", "method": "POST", "description": "Text summarization"},
-            {"path": f"{settings.api_v1_str}/ner", "method": "POST", "description": "Named Entity Recognition"}
+            {"path": f"{settings.api_v1_str}/ner", "method": "POST", "description": "Named Entity Recognition"},
+            {"path": f"{settings.api_v1_str}/sentiment", "method": "POST", "description": "Sentiment analysis"}
         ]
     }
 
