@@ -11,3 +11,5 @@ python-dotenv==1.1.0       # Loads .env file for local development
 sacremoses==0.1.1
 sentencepiece==0.2.0
 protobuf==6.30.2
+psutil==5.9.8             # For system and process utilities (used in health check)
+python-dotenv==1.1.0       # For loading environment variables from .env file

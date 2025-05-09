@@ -8,7 +8,8 @@ class VectorEmbeddingService:
         settings = get_settings()
         self.tokenizer = AutoTokenizer.from_pretrained(settings.text_to_vector_model_name)
         self.model = AutoModel.from_pretrained(settings.text_to_vector_model_name)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        #self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
         self.model.to(self.device)
         self.model.eval()
 

@@ -1,10 +1,13 @@
 # app/service/named_entity_recognition.py
-from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
+from transformers import AutoModelForTokenClassification, pipeline
+from typing import Dict, List, Union
 from ..utils.logging_utils import logger
+from .base_service import BaseService
 
-class NamedEntityRecognitionService:
+class NamedEntityRecognitionService(BaseService[str, Dict[str, List[Dict[str, Union[str, float]]]]]):
     """Service for performing named entity recognition on text."""
     
+    # Entity type mapping from model tags to readable categories
     ENTITY_TYPE_MAP = {
         'B-MISC': 'Miscellaneous',
         'I-MISC': 'Miscellaneous',
@@ -16,51 +19,85 @@ class NamedEntityRecognitionService:
         'I-LOC': 'Location'
     }
     
- 
+    # Default entity categories - defined as class constant
+    DEFAULT_CATEGORIES = {
+        "Person": [],
+        "Organization": [],
+        "Location": [],
+        "Miscellaneous": []
+    }
     
-    def __init__(self, model_name="dslim/bert-base-NER"):
-        try:
-            logger.info(f"Loading NER model: {model_name}")
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.model = AutoModelForTokenClassification.from_pretrained(model_name)
-            self.nlp = pipeline("ner", model=self.model, tokenizer=self.tokenizer)
-            logger.info("NER model loaded successfully")
-        except Exception as e:
-            logger.error(f"Error loading NER model: {str(e)}")
-            raise
+    def __init__(self, model_name="dslim/bert-base-NER", quantize=False):
+        """
+        Initialize the NER service.
+        
+        Args:
+            model_name: Name or path of the model to use
+            quantize: Whether to quantize the model for faster inference
+        """
+        super().__init__(
+            model_name=model_name,
+            model_type=AutoModelForTokenClassification,
+            quantize=quantize
+        )
+        logger.info(f"NER service initialized with model: {model_name}")
+        self.min_score = 0.7  # Default threshold
 
-    def process_text(self, text: str, min_score=0.7) -> dict:
-        """Process text to identify named entities."""
-        DEFAULT_CATEGORIES = {
-            "Person": [],
-            "Organization": [],
-            "Location": [],
-            "Miscellaneous": [],
-        }
+    def process_text(self, text: str, min_score=0.7) -> Dict[str, List[Dict[str, Union[str, float]]]]:
+        """
+        Process text to identify named entities.
         
+        Args:
+            text: Text to process for named entities
+            min_score: Minimum confidence score for entity extraction
+            
+        Returns:
+            Dictionary with extracted entities by category
+        """
         self.min_score = min_score
+        return self.process(text)
+    
+    def _process_implementation(self, text: str) -> Dict[str, List[Dict[str, Union[str, float]]]]:
+        """
+        Implementation of the NER processing logic.
         
-        raw_entities = self.nlp(text)
-        grouped_entities = self._group_entities(raw_entities,DEFAULT_CATEGORIES)
+        Args:
+            text: The text to process
+            
+        Returns:
+            Dictionary with extracted entities by category
+        """
+        # Create NER pipeline using the model and tokenizer
+        nlp = pipeline("ner", model=self.model, tokenizer=self.tokenizer, device=0 if self.device == "cuda" else -1)
+        
+        # Get raw entities
+        raw_entities = nlp(text)
+        
+        # Create a fresh copy of the default categories
+        categories = {category: [] for category in self.DEFAULT_CATEGORIES}
+        
+        # Process entities
+        grouped_entities = self._group_entities(raw_entities, categories)
         return self._cleanup_entities(grouped_entities)
     
-    def _group_entities(self, entities, DEFAULT_CATEGORIES):
+    def _group_entities(self, entities: List[Dict], categories: Dict) -> Dict:
         """
         Group raw entity tokens into complete named entities.
         
         Args:
-            entities (list): Raw entity tokens from the model
+            entities: Raw entity tokens from the model
+            categories: Dictionary with empty lists for each entity category
             
         Returns:
-            dict: Grouped entities by category
+            Dictionary with grouped entities by category
         """
-        grouped_entities = DEFAULT_CATEGORIES
+        grouped_entities = categories
         current_entity = {"text": "", "type": None, "score": 0.0}
         
         for entity in entities:
             word = entity["word"]
             entity_tag = entity["entity"]
-            label = self.ENTITY_TYPE_MAP.get(entity_tag, "Other")
+            label = self.ENTITY_TYPE_MAP.get(entity_tag, "Miscellaneous")
             score = float(entity["score"])
             is_subword = word.startswith("##")
             
@@ -103,23 +140,28 @@ class NamedEntityRecognitionService:
             
         return grouped_entities
     
-    def _cleanup_entities(self, entity_dict):
+    def _cleanup_entities(self, entity_dict: Dict) -> Dict:
         """
         Clean up entities by removing duplicates and low-confidence entities.
         
         Args:
-            entity_dict (dict): Dictionary of categorized entities
+            entity_dict: Dictionary of categorized entities
             
         Returns:
-            dict: Cleaned dictionary of entities
+            Cleaned dictionary of entities
         """
+        result = {}
+        
         for category, entities in entity_dict.items():
-            if not entities:  # Skip empty lists
+            # Skip empty categories
+            if not entities:
+                result[category] = []
                 continue
                 
             # Remove duplicates while preserving order
             seen_texts = set()
             unique_entities = []
+            
             for entity in entities:
                 # Skip low-quality entities
                 if (entity['text'].startswith('##') or 
@@ -131,8 +173,9 @@ class NamedEntityRecognitionService:
                     seen_texts.add(entity['text'])
                     unique_entities.append(entity)
             
-            entity_dict[category] = unique_entities
+            result[category] = unique_entities
         
-        return entity_dict
+        return result
+
 # Create singleton instance
 ner_service = NamedEntityRecognitionService()
