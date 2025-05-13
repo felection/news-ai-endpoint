@@ -6,21 +6,22 @@ This script processes text to identify and categorize entities.
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
+
 class NamedEntityRecognizer:
     """Class for performing named entity recognition on text."""
-    
+
     # Entity type mapping from model tags to readable categories
     ENTITY_TYPE_MAP = {
-        'B-MISC': 'Miscellaneous',
-        'I-MISC': 'Miscellaneous',
-        'B-PER': 'Person',
-        'I-PER': 'Person',
-        'B-ORG': 'Organization',
-        'I-ORG': 'Organization',
-        'B-LOC': 'Location',
-        'I-LOC': 'Location'
+        "B-MISC": "Miscellaneous",
+        "I-MISC": "Miscellaneous",
+        "B-PER": "Person",
+        "I-PER": "Person",
+        "B-ORG": "Organization",
+        "I-ORG": "Organization",
+        "B-LOC": "Location",
+        "I-LOC": "Location",
     }
-    
+
     # Default entity categories
     DEFAULT_CATEGORIES = {
         "Person": [],
@@ -28,13 +29,13 @@ class NamedEntityRecognizer:
         "Location": [],
         "Miscellaneous": [],
         "Date": [],
-        "Money": []
+        "Money": [],
     }
-    
+
     def __init__(self, model_name="dslim/bert-base-NER", min_score=0.80):
         """
         Initialize the NER processor.
-        
+
         Args:
             model_name (str): Name of the HuggingFace model to use
             min_score (float): Minimum confidence score threshold for entities
@@ -43,60 +44,60 @@ class NamedEntityRecognizer:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.nlp = pipeline("ner", model=self.model, tokenizer=self.tokenizer)
-    
+
     def process_text(self, text):
         """
         Process text to identify named entities.
-        
+
         Args:
             text (str): Text to analyze
-            
+
         Returns:
             dict: Dictionary of categorized entities
         """
         # Get raw entities from the model
         raw_entities = self.nlp(text)
-        
+
         # Process and group entities
         grouped_entities = self._group_entities(raw_entities)
-        
+
         # Clean up the results
         return self._cleanup_entities(grouped_entities)
-    
+
     def _group_entities(self, entities):
         """
         Group raw entity tokens into complete named entities.
-        
+
         Args:
             entities (list): Raw entity tokens from the model
-            
+
         Returns:
             dict: Grouped entities by category
         """
         grouped_entities = self.DEFAULT_CATEGORIES.copy()
         current_entity = {"text": "", "type": None, "score": 0.0}
-        
+
         for entity in entities:
             word = entity["word"]
             entity_tag = entity["entity"]
             label = self.ENTITY_TYPE_MAP.get(entity_tag, "Other")
             score = float(entity["score"])
             is_subword = word.startswith("##")
-            
+
             # Handle new entity (B- prefix)
             if entity_tag.startswith("B-"):
                 # Save previous entity if it exists
                 if current_entity["type"]:
                     current_entity["text"] = current_entity["text"].strip()
                     grouped_entities[current_entity["type"]].append(current_entity)
-                
+
                 # Start new entity
                 current_entity = {
                     "text": word,
                     "type": label,
                     "score": score,
                 }
-            
+
             # Handle continuation of entity (I- prefix)
             elif entity_tag.startswith("I-") and current_entity["type"] == label:
                 if is_subword:
@@ -107,52 +108,54 @@ class NamedEntityRecognizer:
                     current_entity["text"] += " " + word
                 # Keep tracking the score
                 current_entity["score"] = max(current_entity["score"], score)
-            
+
             # Handle other cases (entity type change or non-entity)
             else:
                 if current_entity["type"]:
                     current_entity["text"] = current_entity["text"].strip()
                     grouped_entities[current_entity["type"]].append(current_entity)
                 current_entity = {"text": "", "type": None, "score": 0.0}
-        
+
         # Add the final entity if one exists
         if current_entity["type"]:
             current_entity["text"] = current_entity["text"].strip()
             grouped_entities[current_entity["type"]].append(current_entity)
-            
+
         return grouped_entities
-    
+
     def _cleanup_entities(self, entity_dict):
         """
         Clean up entities by removing duplicates and low-confidence entities.
-        
+
         Args:
             entity_dict (dict): Dictionary of categorized entities
-            
+
         Returns:
             dict: Cleaned dictionary of entities
         """
         for category, entities in entity_dict.items():
             if not entities:  # Skip empty lists
                 continue
-                
+
             # Remove duplicates while preserving order
             seen_texts = set()
             unique_entities = []
-            
+
             for entity in entities:
                 # Skip low-quality entities
-                if (entity['text'].startswith('##') or 
-                    len(entity['text']) <= 1 or 
-                    entity['score'] < self.min_score):
+                if (
+                    entity["text"].startswith("##")
+                    or len(entity["text"]) <= 1
+                    or entity["score"] < self.min_score
+                ):
                     continue
-                    
-                if entity['text'] not in seen_texts:
-                    seen_texts.add(entity['text'])
+
+                if entity["text"] not in seen_texts:
+                    seen_texts.add(entity["text"])
                     unique_entities.append(entity)
-            
+
             entity_dict[category] = unique_entities
-        
+
         return entity_dict
 
 
@@ -166,9 +169,10 @@ def main():
     # Create NER processor and analyze text
     ner = NamedEntityRecognizer()
     results = ner.process_text(example)
-    
+
     # Print results
-    print("Named Entities Found:",results)
+    print("Named Entities Found:", results)
+
 
 if __name__ == "__main__":
     main()
