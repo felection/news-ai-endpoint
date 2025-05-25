@@ -8,6 +8,7 @@ from .named_entity_recognition import router as named_entity_recognition_router
 from .emotion_extraction import router as emotion_router
 from .sentiment_analysis import router as sentiment_router
 from .text_generation import router as text_generation_router
+from .gemini import router as gemini_router
 
 router = APIRouter()
 
@@ -22,3 +23,4 @@ router.include_router(
 router.include_router(sentiment_router, tags=["Sentiment analysis"])
 router.include_router(emotion_router, tags=["Emotion analysis"])
 router.include_router(text_generation_router, tags=["Text generation"])
+router.include_router(gemini_router, tags=["Gemini API"])

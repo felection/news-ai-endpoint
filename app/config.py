@@ -46,6 +46,8 @@ class Settings(BaseSettings):
         os.getenv("TEXT_GENERATION_CONTEXT_LENGTH", 2048)
     )  # Context length for text generation
 
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+
     class Config:
         env_file = "../.env"
 
