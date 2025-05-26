@@ -19,7 +19,8 @@ class GeminiKeyManager:
         i = 1
         while True:
             key_name = f"GEMINI_API_KEY_{i}"
-            key = os.environ.get(key_name)
+            key = getattr(settings, key_name.lower(), None)
+
             if key:
                 self.keys.append(key)
                 logger.info(f"Added additional Gemini API key: {key_name}")

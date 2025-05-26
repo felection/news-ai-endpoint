@@ -47,10 +47,11 @@ class Settings(BaseSettings):
     )  # Context length for text generation
 
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    gemini_api_key_1: str = os.getenv("GEMINI_API_KEY_1", "")
+    gemini_api_key_2: str = os.getenv("GEMINI_API_KEY_2", "")
 
     class Config:
         env_file = "/root/news-ai-endpoint/.env" if os.path.exists("/root/news-ai-endpoint/.env") else  "../.env"
-        extra = "allow"  # Allow extra fields in the .env file
 
 
 
