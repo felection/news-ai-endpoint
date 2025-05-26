@@ -6,9 +6,7 @@ from ..config import get_settings
 import os
 
 settings = get_settings()
-client = genai.Client(api_key=settings.gemini_api_key)
-
-
+ 
 class GeminiKeyManager:
     """Manages multiple Gemini API keys and rotates them for each request."""
 
@@ -35,7 +33,6 @@ class GeminiKeyManager:
         """Get the next API key in the rotation."""
         if not self.keys:
             raise ValueError("No Gemini API keys available")
-        print("Rotating keys", self.keys)
         key = self.keys[self.current_index]
         self.current_index = (self.current_index + 1) % len(self.keys)
         return key
@@ -90,7 +87,6 @@ class GeminiService:
             )
             # Get a fresh client with the next API key
             client = key_manager.get_client()
-            print(f"Using model: {model_name} with key: {client._api_client.api_key}")
 
             request_kwargs = {
                 "model": model_name,

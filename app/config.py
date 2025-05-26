@@ -49,7 +49,9 @@ class Settings(BaseSettings):
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
 
     class Config:
-        env_file = "../.env"
+        env_file = "/root/news-ai-endpoint/.env" if os.path.exists("/root/news-ai-endpoint/.env") else  "../.env"
+        extra = "allow"  # Allow extra fields in the .env file
+
 
 
 def get_settings():
